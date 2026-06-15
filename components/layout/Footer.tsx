@@ -8,8 +8,8 @@ export default function Footer() {
           Built with Next.js, TanStack Query & Tailwind CSS
         </p>
         <p className="text-xs text-slate-400">
-          Data from{" "}
-          <span className="font-medium text-slate-500">JSONPlaceholder</span>
+          Powered by{" "}
+          <span className="font-semibold text-slate-600">Abdelhakam Elewa</span>
         </p>
       </Container>
     </footer>
