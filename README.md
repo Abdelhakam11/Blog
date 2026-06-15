@@ -161,3 +161,7 @@ All data comes from the public [JSONPlaceholder](https://jsonplaceholder.typicod
 | `DELETE` | `/posts/:id` | Delete post |
 
 > JSONPlaceholder simulates responses — mutations are reflected in the UI via optimistic updates and cache management, not persisted server-side.
+
+---
+
+Powered by **Abdelhakam Elewa**
