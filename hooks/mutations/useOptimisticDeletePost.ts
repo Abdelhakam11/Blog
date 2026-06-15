@@ -3,8 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost } from "@/lib/api/posts";
 import { queryKeys } from "@/lib/query/queryClient";
-import { removePostFromNormalized } from "@/lib/utils/normalize";
-import type { NormalizedPosts } from "@/types";
+import type { Post } from "@/types";
 
 interface UseOptimisticDeletePostResult {
   mutate: (id: number) => void;
@@ -17,18 +16,18 @@ interface UseOptimisticDeletePostResult {
 
 export function useOptimisticDeletePost(): UseOptimisticDeletePostResult {
   const queryClient = useQueryClient();
-  let deletingId: number | null = null;
 
   const { mutate, isPending, error, isSuccess, reset, variables } = useMutation({
     mutationFn: deletePost,
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.posts });
-      const previous = queryClient.getQueryData<NormalizedPosts>(queryKeys.posts);
+      // Cache stores raw Post[] — select:normalizePosts only runs at read time
+      const previous = queryClient.getQueryData<Post[]>(queryKeys.posts);
 
       if (previous) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<Post[]>(
           queryKeys.posts,
-          removePostFromNormalized(previous, id)
+          previous.filter((p) => p.id !== id)
         );
       }
 
@@ -45,7 +44,7 @@ export function useOptimisticDeletePost(): UseOptimisticDeletePostResult {
     },
   });
 
-  deletingId = isPending && variables !== undefined ? variables : null;
+  const deletingId = isPending && variables !== undefined ? variables : null;
 
   return {
     mutate,

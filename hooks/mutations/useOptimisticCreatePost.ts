@@ -3,8 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api/posts";
 import { queryKeys } from "@/lib/query/queryClient";
-import { addPostToNormalized } from "@/lib/utils/normalize";
-import type { CreatePostInput, NormalizedPosts, Post } from "@/types";
+import type { CreatePostInput, Post } from "@/types";
 
 interface UseOptimisticCreatePostResult {
   mutate: (input: CreatePostInput) => void;
@@ -22,7 +21,8 @@ export function useOptimisticCreatePost(): UseOptimisticCreatePostResult {
     mutationFn: createPost,
     onMutate: async (newPost) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.posts });
-      const previous = queryClient.getQueryData<NormalizedPosts>(queryKeys.posts);
+      // Cache stores raw Post[] — select:normalizePosts only runs at read time
+      const previous = queryClient.getQueryData<Post[]>(queryKeys.posts);
 
       const optimistic: Post = {
         id: Date.now(),
@@ -32,10 +32,7 @@ export function useOptimisticCreatePost(): UseOptimisticCreatePostResult {
       };
 
       if (previous) {
-        queryClient.setQueryData(
-          queryKeys.posts,
-          addPostToNormalized(previous, optimistic)
-        );
+        queryClient.setQueryData<Post[]>(queryKeys.posts, [optimistic, ...previous]);
       }
 
       return { previous };
