@@ -1,4 +1,4 @@
-import type { Comment, CreatePostInput, Post, UpdatePostInput } from "@/types";
+import type { Comment, CreatePostInput, Post, UpdatePostInput, User } from "@/types";
 
 const BASE_URL = "https://jsonplaceholder.typicode.com";
 
@@ -45,4 +45,8 @@ export async function deletePost(id: number): Promise<void> {
   await fetchJSON<Record<string, never>>(`${BASE_URL}/posts/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function getUsers(): Promise<User[]> {
+  return fetchJSON<User[]>(`${BASE_URL}/users`);
 }

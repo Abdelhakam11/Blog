@@ -2,14 +2,16 @@
 
 import { useState, type FormEvent } from "react";
 import type { CreatePostInput, Post } from "@/types";
+import { useUsers } from "@/hooks/queries/useUsers";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
+import UserSelect from "@/components/ui/UserSelect";
 
 interface FormValues {
   title: string;
   body: string;
-  userId: string;
+  userId: number | null;
 }
 
 interface FormErrors {
@@ -28,6 +30,7 @@ interface PostFormProps {
 
 function validate(values: FormValues): FormErrors {
   const errors: FormErrors = {};
+
   if (!values.title.trim()) {
     errors.title = "Title is required";
   } else if (values.title.trim().length < 3) {
@@ -42,9 +45,8 @@ function validate(values: FormValues): FormErrors {
     errors.body = "Body must be at least 10 characters";
   }
 
-  const userId = parseInt(values.userId, 10);
-  if (!values.userId.trim() || isNaN(userId) || userId < 1 || userId > 10) {
-    errors.userId = "User ID must be a number between 1 and 10";
+  if (values.userId === null) {
+    errors.userId = "Please select an author";
   }
 
   return errors;
@@ -57,10 +59,12 @@ export default function PostForm({
   submitLabel,
   onCancel,
 }: PostFormProps) {
+  const { data: users, isLoading: usersLoading, error: usersError } = useUsers();
+
   const [values, setValues] = useState<FormValues>({
     title: initialValues?.title ?? "",
     body: initialValues?.body ?? "",
-    userId: initialValues?.userId?.toString() ?? "1",
+    userId: initialValues?.userId ?? null,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<keyof FormValues, boolean>>({
@@ -76,6 +80,12 @@ export default function PostForm({
       const newErrors = validate(newValues);
       setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
     }
+  }
+
+  function handleUserChange(userId: number) {
+    setValues((prev) => ({ ...prev, userId }));
+    setTouched((prev) => ({ ...prev, userId: true }));
+    setErrors((prev) => ({ ...prev, userId: undefined }));
   }
 
   function handleBlur(field: keyof FormValues) {
@@ -94,7 +104,7 @@ export default function PostForm({
     onSubmit({
       title: values.title.trim(),
       body: values.body.trim(),
-      userId: parseInt(values.userId, 10),
+      userId: values.userId!,
     });
   }
 
@@ -128,17 +138,15 @@ export default function PostForm({
         rows={8}
       />
 
-      <Input
-        label="Author ID"
-        required
-        type="number"
-        min={1}
-        max={10}
+      <UserSelect
+        users={users}
+        isLoading={usersLoading}
+        error={usersError}
         value={values.userId}
-        onChange={(e) => handleChange("userId", e.target.value)}
+        onChange={handleUserChange}
         onBlur={() => handleBlur("userId")}
-        error={touched.userId ? errors.userId : undefined}
-        hint="Must be a number between 1–10"
+        errorMessage={touched.userId ? errors.userId : undefined}
+        required
       />
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

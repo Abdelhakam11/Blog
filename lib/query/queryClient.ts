@@ -4,6 +4,7 @@ export const queryKeys = {
   posts: ["posts"] as const,
   post: (id: number) => ["post", id] as const,
   comments: (postId: number) => ["comments", postId] as const,
+  users: ["users"] as const,
 } as const;
 
 export function createQueryClient(): QueryClient {
